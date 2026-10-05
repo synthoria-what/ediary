@@ -52,3 +52,10 @@ func WriteError(w http.ResponseWriter, status int, err error) {
 
 	WriteJSON(w, status, response)
 }
+
+func GetDeviceInfo(r *http.Request) models.DeviceInfo {
+	return models.DeviceInfo{
+		UserAgent: r.UserAgent(),
+		IPAddress: r.RemoteAddr,
+	}
+}

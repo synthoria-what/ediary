@@ -40,3 +40,8 @@ type UserCreateForm struct {
 	Password string
 	Role     string
 }
+
+type UserStats struct {
+	RequestCount int
+	IsBanned     bool
+}

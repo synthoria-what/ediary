@@ -12,6 +12,7 @@ import (
 func InitRoutes(h *handlers.Handlers) *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(middleware.LoggingMiddleware)
+	r.Use(middleware.RateLimitMiddleware)
 	r.Get("/", healthCheck)
 
 	r.Route("/user", func(r chi.Router) {

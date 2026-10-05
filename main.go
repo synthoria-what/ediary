@@ -3,12 +3,15 @@ package main
 import (
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"synthori/ediary/m/database"
 	"synthori/ediary/m/handlers"
 	"synthori/ediary/m/routes"
 	"synthori/ediary/m/services"
+
+	"github.com/joho/godotenv"
 )
 
 func run() error {
@@ -46,19 +49,35 @@ func run() error {
 	return err
 }
 
-func main() {
-	log.SetFlags(log.LstdFlags | log.Lshortfile | log.Lmsgprefix)
-	log.SetPrefix("[ediary] ")
-
-	err := run()
-	if err != nil {
-		// Печатаем всё, что можно: тип, значение, длину, байты
-		log.Printf("run returned error")
-		log.Printf("  type:   %T", err)
-		log.Printf("  value:  %+v", err)
-		log.Printf("  quoted: %q", err.Error())
-		log.Printf("  len:    %d", len(err.Error()))
-		log.Fatalf("fatal: %v", err)
+func init() {
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found")
 	}
-	log.Println("exited normally")
+}
+
+func main() {
+	file, err := os.OpenFile("app.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		slog.Error("failed to open log file", "error", err)
+		os.Exit(1)
+	}
+	defer file.Close()
+
+	logger := slog.New(slog.NewJSONHandler(file, &slog.HandlerOptions{
+		AddSource: true,
+		Level:     slog.LevelDebug,
+	}))
+	slog.SetDefault(logger)
+
+	err = run()
+	if err != nil {
+		slog.Error("run execution failed",
+			"error_type", fmt.Sprintf("%T", err),
+			"error_value", fmt.Sprintf("%+v", err),
+			"error_quoted", fmt.Sprintf("%q", err.Error()),
+			"error_len", len(err.Error()),
+			"err", err, // slog автоматически вызовет err.Error()
+		)
+	}
+	slog.Info("exited normally")
 }
