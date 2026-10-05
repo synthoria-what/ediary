@@ -1,5 +1,7 @@
 name: CI
 
+run-name: ${{ github.actor }} is linting and testing code
+
 on:
   push:
     branches: [ main, develop ]

@@ -10,6 +10,7 @@ import (
 	"synthori/ediary/m/handlers"
 	"synthori/ediary/m/routes"
 	"synthori/ediary/m/services"
+	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -20,8 +21,6 @@ func run() error {
 	if dsn == "" {
 		dsn = "ediary.db"
 	}
-
-	log.Printf("DB_NAME=%q", dsn)
 
 	db, err := database.OpenDB(dsn)
 	if err != nil {
@@ -49,7 +48,12 @@ func run() error {
 	log.Println("routes registered")
 
 	log.Println("listening on :8000")
-	err = http.ListenAndServe(":8000", r)
+	server := &http.Server{
+		Addr:              ":1234",
+		ReadHeaderTimeout: 3 * time.Second,
+		Handler:           r,
+	}
+	err = server.ListenAndServe()
 	log.Printf("ListenAndServe returned: %+v", err)
 	return err
 }
@@ -61,7 +65,7 @@ func init() {
 }
 
 func main() {
-	file, err := os.OpenFile("app.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	file, err := os.OpenFile("app.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
 	if err != nil {
 		slog.Error("failed to open log file", "error", err)
 		os.Exit(1)
