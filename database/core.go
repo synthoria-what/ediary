@@ -20,7 +20,11 @@ func OpenDB(dsn string) (*sql.DB, error) {
 	db.SetConnMaxLifetime(0)
 
 	if err := db.Ping(); err != nil {
-		db.Close()
+		defer func() {
+			if err := db.Close(); err != nil {
+				log.Printf("close db: %v", err)
+			}
+		}()
 		return nil, fmt.Errorf("db ping: %w", err)
 	}
 

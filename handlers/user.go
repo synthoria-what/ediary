@@ -62,11 +62,19 @@ func (h UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		WriteError(w, 400, err)
 		return
 	}
-	defer r.Body.Close()
-
+	defer func () {
+		if err = r.Body.Close(); err != nil {
+			WriteError(w, 400, err)
+			return
+		}
+	}()
 	user.Role = "user"
 
 	newUser, err := h.service.CreateUser(user)
+	if err != nil {
+		WriteError(w, 400, err)
+		return
+	}
 
 	WriteSuccess(w, 200, "successful create user", newUser)
 }

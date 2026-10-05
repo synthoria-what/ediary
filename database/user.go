@@ -3,6 +3,8 @@ package database
 import (
 	"database/sql"
 	"errors"
+	"fmt"
+	"log/slog"
 	"synthori/ediary/m/models"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -72,7 +74,11 @@ func (repo *SQLiteUserDatabase) GetUsers(limit int, offset int) ([]models.GetUse
 	if err != nil {
 		return []models.GetUser{}, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			slog.Warn("Warning", "close file: ", fmt.Sprintf("%s", err))
+		}
+	}()
 
 	for rows.Next() {
 		var user models.GetUser

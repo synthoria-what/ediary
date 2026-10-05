@@ -27,7 +27,12 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("open db (dsn=%q): %w", dsn, err)
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			slog.Error("Error open db")
+			return
+		}
+	}()
 	log.Println("db opened")
 
 	userRepo := database.NewSQLiteUserDatabase(db)
@@ -61,7 +66,11 @@ func main() {
 		slog.Error("failed to open log file", "error", err)
 		os.Exit(1)
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Printf("close file: %v", err)
+		}
+	}()
 
 	logger := slog.New(slog.NewJSONHandler(file, &slog.HandlerOptions{
 		AddSource: true,
