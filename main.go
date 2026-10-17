@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"log/slog"
@@ -35,21 +36,27 @@ func run() error {
 	log.Println("db opened")
 
 	userRepo := database.NewSQLiteUserDatabase(db)
-
 	userSvc := services.NewUserService(userRepo)
-	log.Println("user svc built")
-
 	userHandler := handlers.NewUserHandler(userSvc)
-	log.Println("handler built")
 
-	hs := handlers.Handlers{User: userHandler}
+	diaryRepo := database.NewSQLiteDiaryDatabase(db)
+	diarySvc := services.NewDiaryService(*diaryRepo)
+	diaryHandler := handlers.NewDiaryHandler(*diarySvc)
+
+	hs := handlers.Handlers{User: userHandler,
+		Diary: diaryHandler}
 
 	r := routes.InitRoutes(&hs)
 	log.Println("routes registered")
 
-	log.Println("listening on :8000")
+	port, exists := os.LookupEnv("DEFAULT_PORT")
+	if !exists {
+		return errors.New("ports didn't found")
+	}
+
+	log.Printf("listening on :%s", port)
 	server := &http.Server{
-		Addr:              ":1234",
+		Addr:              fmt.Sprintf(":%s", port),
 		ReadHeaderTimeout: 3 * time.Second,
 		Handler:           r,
 	}
@@ -89,7 +96,7 @@ func main() {
 			"error_value", fmt.Sprintf("%+v", err),
 			"error_quoted", fmt.Sprintf("%q", err.Error()),
 			"error_len", len(err.Error()),
-			"err", err, // slog автоматически вызовет err.Error()
+			"err", err,
 		)
 	}
 	slog.Info("exited normally")

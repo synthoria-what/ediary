@@ -15,7 +15,6 @@ type DiaryEntries struct {
 }
 
 type Homework struct {
-	ID      int    `json:"id"`
-	DiaryID int    `json:"diary_id"`
-	Subject string `json:"subject"`
+	ID      int `json:"id"`
+	DiaryID int `json:"diary_id"`
 }
