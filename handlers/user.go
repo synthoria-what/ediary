@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"synthori/ediary/m/models"
@@ -62,7 +64,7 @@ func (h UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		WriteError(w, 400, err)
 		return
 	}
-	defer func () {
+	defer func() {
 		if err = r.Body.Close(); err != nil {
 			WriteError(w, 400, err)
 			return
@@ -77,4 +79,37 @@ func (h UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	WriteSuccess(w, 200, "successful create user", newUser)
+}
+
+func (h UserHandler) AuthUser(w http.ResponseWriter, r *http.Request) {
+	var req models.LoginUser
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		// http.Error(w, "invalid request body", http.StatusBadRequest)
+		WriteError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	token, err := h.service.LoginUser(req.Username, req.Password)
+	if err != nil {
+		// http.Error(
+		// 	w,
+		// 	"invalid username or password",
+		// 	http.StatusUnauthorized,
+		// )
+		WriteError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	response := models.LoginResponse{
+		Token: token,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		// "error_type", fmt.Sprintf("%T", err)
+		slog.Error("failed to encode login response: ", "error_login: ", fmt.Sprintf("%v", err))
+	}
 }

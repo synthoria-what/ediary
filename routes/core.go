@@ -15,6 +15,10 @@ func InitRoutes(h *handlers.Handlers) *chi.Mux {
 	// r.Use(middleware.RateLimitMiddleware)
 	r.Get("/health", healthCheck)
 
+	r.Route("/auth", func(r chi.Router) {
+		r.Post("/login", h.User.AuthUser)
+	})
+
 	r.Route("/user", func(r chi.Router) {
 		r.Get("/dummy", h.User.GetDummyUser)
 		r.Post("/", h.User.CreateUser)
